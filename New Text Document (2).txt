@@ -1,0 +1,50 @@
+import os
+import wfdb
+import csv
+
+def process_file(file_path, result_folder):
+    # Extract file name from the path
+    file_name = os.path.splitext(os.path.basename(file_path))[0]
+
+    # Read the WFDB file using rdsamp function
+    signals, metadata = wfdb.rdsamp(file_path)
+
+    # Access metadata information
+    fs = metadata['fs']
+    sig_len = metadata['sig_len']
+    n_sig = metadata['n_sig']
+    sig_names = metadata['sig_name']
+    units = metadata['units']
+    comments = metadata['comments']
+
+    csv_file_name = os.path.join(result_folder, f"{file_name}.csv")
+    with open(csv_file_name, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+
+        # Write the header row to the CSV file
+        header = ['time'] + sig_names
+        writer.writerow(header)
+
+        # Write the data to the CSV file
+        for i in range(sig_len):
+            time_stamp = i / fs  # Calculate the time stamp
+            row = [time_stamp] + [signals[i][j] for j in range(n_sig)]
+            writer.writerow(row)
+
+    print(f"File {file_name} processed successfully.")
+
+
+# Provide the path to the file you want to process
+file_to_process = './010/JS00005'  # Assuming this is the path to the WFDB file
+
+# Get the directory where the script is located
+script_directory = os.path.dirname(__file__)
+
+# Specify the directory where you want to save the processed CSV file
+result_folder = os.path.join(script_directory, 'result_folder')
+
+# Create the result folder if it doesn't exist
+os.makedirs(result_folder, exist_ok=True)
+
+# Process the file
+process_file(file_to_process, result_folder)
